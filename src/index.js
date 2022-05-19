@@ -1,13 +1,27 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import "./styles/index.scss";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import { ThemeProvider } from "styled-components";
+import { GlobalStyles } from "./styles/GlobalStyles";
+import { theme } from "./utils/constants";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { ToastContainer, toast, Zoom } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+const container = document.getElementById("root");
+const root = createRoot(container);
+
 root.render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider theme={theme}>
+      <GlobalStyles />
+      <BrowserRouter>
+        <App />
+        <ToastContainer limit={3} transition={Zoom}></ToastContainer>
+      </BrowserRouter>
+    </ThemeProvider>
   </React.StrictMode>
 );
 
