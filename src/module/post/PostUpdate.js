@@ -35,6 +35,7 @@ import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import ImageUploader from "quill-image-uploader";
 import axios from "axios";
+import slugify from "slugify";
 Quill.register("modules/imageUploader", ImageUploader);
 
 const PostUpdate = () => {
@@ -207,6 +208,9 @@ const PostUpdate = () => {
   const handleUpdatePost = async (values) => {
     const cloneValues = { ...values };
     cloneValues.content = content;
+     cloneValues.slug = slugify(cloneValues.title || cloneValues.slug, {
+      lower: true,
+    });
     try {
       await updateDoc(doc(db, "posts", postId), {
         ...cloneValues,
