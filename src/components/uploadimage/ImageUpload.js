@@ -1,4 +1,5 @@
 import React from "react";
+import { Fragment } from "react";
 
 const ImageUpload = (props) => {
   const {
@@ -25,7 +26,7 @@ const ImageUpload = (props) => {
         <div className="loading w-8 h-8 rounded-full animate-spin border-4 border-t-4 border-t-transparent border-green-500"></div>
       )}
       {image && (
-        <>
+        <Fragment>
           <button
             type="button"
             onClick={handleDelete}
@@ -47,7 +48,7 @@ const ImageUpload = (props) => {
             </svg>
           </button>
           <div className="overlay absolute inset-0 group-hover:bg-gray-300 group-hover:opacity-40 transition-all"></div>
-        </>
+        </Fragment>
       )}
       {!image && progress === 0 && (
         <div className="flex flex-col items-center text-center pointer-events-none">

@@ -9,7 +9,7 @@ import { IconEyeClose, IconEyeOpen } from "../icon";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "react-toastify";
-import { addDoc, collection } from "firebase/firestore";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import {
   createUserWithEmailAndPassword,
@@ -19,6 +19,8 @@ import {
 import { NavLink, useNavigate } from "react-router-dom";
 import AuthHeader from "../components/authheader/AuthHeader";
 import { useAuth } from "../context/AuthContext";
+import slugify from "slugify";
+import { userRole, userStatus } from "../utils/constants";
 
 const schema = yup.object({
   fullname: yup.string().required("Please enter your fullname"),
@@ -37,8 +39,6 @@ const SignUpPage = () => {
     control,
     handleSubmit,
     formState: { errors, isSubmitting, isValid },
-    watch,
-    reset,
   } = useForm({
     mode: "onChange",
     resolver: yupResolver(schema),
@@ -46,23 +46,24 @@ const SignUpPage = () => {
 
   const handleSignUp = async (values) => {
     try {
-      const cred = await createUserWithEmailAndPassword(
-        auth,
-        values.email,
-        values.password
-      );
+      await createUserWithEmailAndPassword(auth, values.email, values.password);
       updateProfile(auth.currentUser, {
         displayName: values.fullname,
       });
-      const usersRef = collection(db, "users");
 
       onAuthStateChanged(auth, (user) => {
         setUser(user);
       });
-      await addDoc(usersRef, {
+
+      await setDoc(doc(db, "users", auth.currentUser.uid), {
         fullname: values.fullname,
         email: values.email,
         password: values.password,
+        username: slugify(values.fullname, { lower: true, replacement: "" }),
+        avatar: "",
+        role: userRole.USER,
+        status: userStatus.ACTIVE,
+        createdAt: serverTimestamp(),
       });
 
       console.log(user);
@@ -129,6 +130,7 @@ const SignUpPage = () => {
           type="submit"
           disabled={isSubmitting}
           isLoading={isSubmitting}
+          className="mt-10"
         >
           Sign Up
         </Button>

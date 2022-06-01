@@ -29,7 +29,6 @@ const SignInPage = () => {
   const handleSignIn = async (values) => {
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      console.log("Success");
       onAuthStateChanged(auth, (user) => {
         setUser(user);
       });

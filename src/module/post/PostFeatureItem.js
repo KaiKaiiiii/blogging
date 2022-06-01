@@ -1,16 +1,7 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
 import React from "react";
-import { useState } from "react";
-import { useEffect } from "react";
+
 import styled from "styled-components";
-import { db } from "../../firebase/firebaseConfig";
+
 import PostCategory from "./PostCategory";
 import PostImage from "./PostImage";
 import PostMeta from "./PostMeta";
@@ -61,33 +52,19 @@ const PostFeatureItemStyles = styled.div`
   }
 `;
 const PostFeatureItem = ({ data }) => {
-  const { image_url, author, title, slug, categoryId, userId, image_name } =
-    data;
+  const {
+    image_url,
 
-  const [category, setCategory] = useState("");
+    title,
+    slug,
+    category,
+    user,
+    image_name,
+    timeStamp,
+  } = data;
 
-  useEffect(() => {
-    async function getData() {
-      const colRef = collection(db, "categories");
-      const q = query(colRef, where("id", "==", categoryId));
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach((doc) => {
-        setCategory(doc.data().category);
-      });
-    }
-    getData();
-  }, []);
-
-  // useEffect(() => {
-  //   async function getData() {
-  //     const colRef = collection(db, "categories");
-  //     const q = query(colRef, where("hot", "==", true));
-  //     const querySnapshot = await getDocs(q);
-  //     querySnapshot.forEach((doc) => {
-  //       setCategory(doc.data().category);
-  //     });
-  //   }
-  // })
+  const date = new Date(timeStamp?.seconds * 1000);
+  const formatDate = date.toLocaleDateString("vi-VI");
 
   return (
     <PostFeatureItemStyles>
@@ -95,10 +72,16 @@ const PostFeatureItem = ({ data }) => {
       <div className="post-overlay"></div>
       <div className="post-content">
         <div className="post-top">
-          <PostCategory>{category}</PostCategory>
-          <PostMeta authorName={author}></PostMeta>
+          <PostCategory to={category?.slug}>{category.name}</PostCategory>
+          <PostMeta
+            authorName={user?.fullname}
+            date={formatDate}
+            to={`/user/${user?.username}`}
+          ></PostMeta>
         </div>
-        <PostTitle size="big">{title}</PostTitle>
+        <PostTitle size="big" to={slug}>
+          {title}
+        </PostTitle>
       </div>
     </PostFeatureItemStyles>
   );

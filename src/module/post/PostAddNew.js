@@ -12,11 +12,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import ImageUpload from "../../components/uploadimage/ImageUpload";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
-import useFirebaseImage from "../../hook/useFirebaseImage";
 import Option from "../../components/dropdown/Option";
 import {
   addDoc,
   collection,
+  doc,
   getDoc,
   getDocs,
   query,
@@ -35,17 +35,16 @@ import slugify from "slugify";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Toggle from "../../components/toggle/Toggle";
+import DashboardHeading from "../dashboard/DashboardHeading";
+import { postStatus } from "../../utils/constants";
 
 const PostAddNewStyles = styled.div``;
 const schema = yup
   .object({
     title: yup.string().required("Enter your title"),
     slug: yup.string("Enter your slug"),
-    author: yup.string().required("Enter author"),
-    status: yup
-      .mixed()
-      .oneOf(["approved", "pending", "reject"])
-      .required("Please choose form status"),
+    author: yup.string("Enter author"),
+    status: yup.mixed().oneOf([1, 2, 3]).required("Please choose form status"),
   })
   .required();
 const PostAddNew = () => {
@@ -65,7 +64,8 @@ const PostAddNew = () => {
       slug: "",
       author: "",
       status: 1,
-      categoryId: "",
+      category: {},
+      user: {},
       image_name: "",
       image_url: "",
       hot: false,
@@ -77,8 +77,6 @@ const PostAddNew = () => {
   const storage = getStorage();
 
   const [user] = useAuth();
-  const watchStatus = watch("status");
-  const watchCategory = watch("category");
   const [categories, setCategories] = useState([]);
   const [placeholder, setPlaceholder] = useState("Please choose your category");
   const [progress, setProgress] = useState(0);
@@ -145,34 +143,39 @@ const PostAddNew = () => {
     cloneValues.slug = slugify(cloneValues.title || cloneValues.slug, {
       lower: true,
     });
+    cloneValues.author = cloneValues?.user?.username || cloneValues.author;
+    try {
+      const colRef = collection(db, "posts");
+      await addDoc(colRef, {
+        ...cloneValues,
+        hot: on,
+        userId: user.uid,
+        timeStamp: serverTimestamp(),
+      });
+      toast.success("New post succesfully uploaded", {
+        pauseOnHover: false,
+        autoClose: 500,
+      });
 
-    toast.success("New post succesfully uploaded", {
-      pauseOnHover: false,
-      autoClose: 500,
-    });
-    const colRef = collection(db, "posts");
-    await addDoc(colRef, {
-      ...cloneValues,
-      hot: on,
-      userId: user.uid,
-      timeStamp: serverTimestamp(),
-    });
-    console.log(cloneValues);
-    if (isValid) {
+      setUrl("");
+      setPlaceholder("Please choose your category");
+      setProgress(0);
+      setOn(false);
+
+      console.log(cloneValues);
+    } catch (error) {
+      console.log(error);
+    } finally {
       reset({
         title: "",
         slug: "",
         author: "",
         status: 1,
-        categoryId: "",
+        category: {},
         image_name: "",
         image_url: "",
         hot: false,
       });
-      setUrl("");
-      setPlaceholder("Please choose your category");
-      setProgress(0);
-      setOn(false);
     }
   };
 
@@ -189,27 +192,54 @@ const PostAddNew = () => {
   }, [errors]);
 
   useEffect(() => {
-    async function getData() {
+    async function getCategories() {
       const result = [];
       const colRef = collection(db, "categories");
-      const q = query(colRef, where("status", "==", 2));
+      const q = query(colRef, where("status", "==", 1));
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach((doc) => {
         result.push({ id: doc.id, ...doc.data() });
       });
       setCategories(result);
     }
-
-    getData();
+    getCategories();
   }, []);
 
-  // useEffect(() => {
-  //   if (!user) navigate("/");
-  // }, []);
+  useEffect(() => {
+    if (!user) return;
+    async function getUserDetail() {
+      const colRef = doc(db, "users", user.uid);
+      const singleDoc = await getDoc(colRef);
+      console.log(singleDoc.data());
+      setValue("user", {
+        id: user.uid,
+        ...singleDoc.data(),
+      });
+    }
+    getUserDetail();
+  }, [user]);
+
+  const handleSelectCategory = (item) => {
+    setPlaceholder(item.name);
+    const categoryId = item.id;
+
+    async function getCategoryDetail() {
+      const colRef = doc(db, "categories", categoryId);
+      const singleDoc = await getDoc(colRef);
+
+      setValue("category", {
+        id: singleDoc.id,
+        ...singleDoc.data(),
+      });
+    }
+    getCategoryDetail();
+  };
+
+  const watchStatus = watch("status");
 
   return (
     <PostAddNewStyles>
-      <h1 className="dashboard-heading">Add new post</h1>
+      <DashboardHeading title="Add new post"></DashboardHeading>
       <form onSubmit={handleSubmit(handleAddPost)}>
         <div className="grid grid-cols-2 gap-x-10 mb-10">
           <Field>
@@ -250,12 +280,9 @@ const PostAddNew = () => {
                   return (
                     <Option
                       key={item.id}
-                      onClick={() => {
-                        setValue("categoryId", item.id);
-                        setPlaceholder(item.category);
-                      }}
+                      onClick={() => handleSelectCategory(item)}
                     >
-                      {item.category}
+                      {item.name}
                     </Option>
                   );
                 })}
@@ -280,27 +307,24 @@ const PostAddNew = () => {
                 <Radio
                   name="status"
                   control={control}
-                  checked={watchStatus === "approved"}
-                  onClick={() => setValue("status", "approved")}
-                  value="approved"
+                  checked={Number(watchStatus) === postStatus.APPROVED}
+                  value={postStatus.APPROVED}
                 >
                   Approved
                 </Radio>
                 <Radio
                   name="status"
                   control={control}
-                  checked={watchStatus === "pending"}
-                  onClick={() => setValue("status", "pending")}
-                  value="pending"
+                  checked={Number(watchStatus) === postStatus.PENDING}
+                  value={postStatus.PENDING}
                 >
                   Pending
                 </Radio>
                 <Radio
                   name="status"
                   control={control}
-                  checked={watchStatus === "reject"}
-                  onClick={() => setValue("status", "reject")}
-                  value="reject"
+                  checked={Number(watchStatus) === postStatus.REJECTED}
+                  value={postStatus.REJECTED}
                 >
                   Reject
                 </Radio>
@@ -312,8 +336,7 @@ const PostAddNew = () => {
             </Field>
           </div>
         </div>
-        <Button type="submit">
-          {/* type="submit" className="mx-auto" */}
+        <Button type="submit" isLoading={isSubmitting} disabled={isSubmitting}>
           Add new post
         </Button>
       </form>

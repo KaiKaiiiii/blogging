@@ -1,15 +1,18 @@
+import { signOut } from "firebase/auth";
 import React from "react";
+import { useCookies } from "react-cookie";
 import { NavLink, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Button from "../components/button/Button";
 import { useAuth } from "../context/AuthContext";
+import { auth } from "../firebase/firebaseConfig";
 
 const HeaderStyled = styled.div`
   .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin: 10px 0 20px;
     &-left {
       gap: 20px;
       display: flex;
@@ -67,20 +70,13 @@ const linkList = [
     to: "/contact",
     title: "Contact",
   },
-  {
-    to: "/manage/add-post",
-    title: "Add post",
-  },
 ];
 
 const Header = () => {
   const navigate = useNavigate();
+
   const [user] = useAuth();
-  console.log(user);
-  function splitName(name) {
-    const splitName = name.split(" ");
-    return splitName[0];
-  }
+
   return (
     <HeaderStyled>
       <div className="container">
@@ -137,12 +133,9 @@ const Header = () => {
               </svg>
             </div>
             {user ? (
-              <div className="">
-                Welcome,
-                <div className="user-display">
-                  {splitName(user?.displayName)}
-                </div>
-              </div>
+              <Button type="button" to="/dashboard">
+                Dashboard
+              </Button>
             ) : (
               <Button
                 primary

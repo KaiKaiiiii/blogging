@@ -5,6 +5,7 @@ import { NavLink } from "react-router-dom";
 import LoadingSpinner from "../loading/LoadingSpinner";
 
 const ButtonStyles = styled.button`
+  margin: 0 auto;
   cursor: pointer;
   padding: 0 25px;
   line-height: 1;
@@ -45,23 +46,12 @@ const ButtonStyles = styled.button`
  * @requires
  * @param {string} type Type of button 'button' | 'submit'
  */
-const Button = ({
-  type = "button",
-  onClick = () => {},
-  children,
-  kind = "primary",
-  ...props
-}) => {
+const Button = ({ type = "button", children, kind = "primary", ...props }) => {
   const { isLoading, to } = props;
   const child = !!isLoading ? <LoadingSpinner></LoadingSpinner> : children;
   if (to !== "" && typeof to === "string") {
     return (
-      <NavLink
-        to={to}
-        style={{
-          display: "inline-block",
-        }}
-      >
+      <NavLink to={to}>
         <ButtonStyles type={type} kind={kind} {...props}>
           {child}
         </ButtonStyles>
@@ -69,7 +59,7 @@ const Button = ({
     );
   }
   return (
-    <ButtonStyles type={type} kind={kind} onClick={onClick} {...props}>
+    <ButtonStyles type={type} kind={kind} {...props}>
       {child}
     </ButtonStyles>
   );

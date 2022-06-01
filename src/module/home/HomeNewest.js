@@ -1,7 +1,9 @@
-import React from "react";
+import { collection, getDocs, limit, query, where } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import { db } from "../../firebase/firebaseConfig";
 import Heading from "../../layout/Heading";
-import PostItem from "../post/PostItem";
+import { postStatus } from "../../utils/constants";
 import PostNewestItem from "../post/PostNewestItem";
 import PostNewestLarge from "../post/PostNewestLarge";
 
@@ -29,23 +31,46 @@ const HomeNewestStyles = styled.div`
 `;
 
 const HomeNewest = () => {
+  const [posts, setPosts] = useState([]);
+  useEffect(() => {
+    async function getData() {
+      const colRef = collection(db, "posts");
+      const q = query(
+        colRef,
+
+        where("status", "==", postStatus.APPROVED),
+        where("hot", "==", false),
+        limit(4)
+      );
+      const querySnapshot = await getDocs(q);
+      const result = [];
+      querySnapshot.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        result.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+      setPosts(result);
+    }
+
+    getData();
+  }, []);
+  const [first, ...others] = posts;
+
   return (
     <HomeNewestStyles className="home-block">
       <div className="container">
         <Heading>Mới nhất</Heading>
         <div className="layout">
-          <PostNewestLarge></PostNewestLarge>
+          {first && <PostNewestLarge data={first}></PostNewestLarge>}
           <div className="sidebar">
-            <PostNewestItem></PostNewestItem>
-            <PostNewestItem></PostNewestItem>
-            <PostNewestItem></PostNewestItem>
+            {others &&
+              others.length > 0 &&
+              others.map((other) => (
+                <PostNewestItem data={other} key={other.id}></PostNewestItem>
+              ))}
           </div>
-        </div>
-        <div className="grid-layout grid-layout--primary">
-          <PostItem></PostItem>
-          <PostItem></PostItem>
-          <PostItem></PostItem>
-          <PostItem></PostItem>
         </div>
       </div>
     </HomeNewestStyles>

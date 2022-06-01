@@ -8,7 +8,7 @@ const List = ({ children }) => {
     <div>
       {show && (
         <div
-          className="absolute top-full left-0 w-full bg-white shadow-sm"
+          className="absolute top-full left-0 w-full bg-white shadow-sm z-10"
           onClick={() => {
             setShow(!show);
           }}

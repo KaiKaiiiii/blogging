@@ -6,6 +6,7 @@ import { db } from "../../firebase/firebaseConfig";
 import Heading from "../../layout/Heading";
 import PostFeatureItem from "../post/PostFeatureItem";
 import { useState } from "react";
+import { postStatus } from "../../utils/constants";
 const HomeFeatureStyles = styled.div``;
 
 const HomeFeature = () => {
@@ -15,7 +16,7 @@ const HomeFeature = () => {
       const colRef = collection(db, "posts");
       const q = query(
         colRef,
-        where("status", "==", "approved"),
+        where("status", "==", postStatus.APPROVED),
         where("hot", "==", true),
         limit(3)
       );
@@ -30,9 +31,10 @@ const HomeFeature = () => {
       });
       setPosts(result);
     }
-    console.log(posts);
+
     getData();
   }, []);
+
   return (
     <HomeFeatureStyles className="home-block">
       <div className="container">

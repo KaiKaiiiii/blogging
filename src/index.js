@@ -9,6 +9,8 @@ import { theme } from "./utils/constants";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { ToastContainer, toast, Zoom } from "react-toastify";
+import { CookiesProvider } from "react-cookie";
+
 import "react-toastify/dist/ReactToastify.css";
 const container = document.getElementById("root");
 const root = createRoot(container);
@@ -18,7 +20,9 @@ root.render(
     <ThemeProvider theme={theme}>
       <GlobalStyles />
       <BrowserRouter>
-        <App />
+        <CookiesProvider>
+          <App />
+        </CookiesProvider>
         <ToastContainer limit={3} transition={Zoom}></ToastContainer>
       </BrowserRouter>
     </ThemeProvider>
