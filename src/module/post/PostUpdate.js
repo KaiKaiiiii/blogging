@@ -225,8 +225,8 @@ const PostUpdate = () => {
   return (
     <div>
       <DashboardHeading
-        title="Update user"
-        desc={`Update for user Id : ${postId}`}
+        title="Update post"
+        desc={`Update for post Id : ${postId}`}
       ></DashboardHeading>
       <form onSubmit={handleSubmit(handleUpdatePost)}>
         <div className="grid grid-cols-2 gap-x-10 mb-10">
